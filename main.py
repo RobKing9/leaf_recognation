@@ -27,9 +27,9 @@ def main():
     input_path = './flavia'
     # 参数
     batch_size = 32
-    lr = 0.001
+    lr = 0.0001
     # 设置训练轮数
-    num_epochs = 20
+    num_epochs = 50
     # 初始化记录性能指标的列表
     train_losses = []
     val_losses = []
