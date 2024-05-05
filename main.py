@@ -26,8 +26,8 @@ def main():
     # 设置数据集路径
     input_path = './flavia'
     # 参数
-    batch_size = 32
-    lr = 0.0001
+    batch_size = 48
+    lr = 0.00001
     # 设置训练轮数
     num_epochs = 50
     # 初始化记录性能指标的列表
@@ -78,6 +78,7 @@ def main():
     model = ResNet50(n_out=n_out)
     # 定义损失函数和优化器
     criterion = nn.CrossEntropyLoss()
+    # 交叉熵损失函数适用于多分类问题，且每个类别的概率分布可以直接用softmax函数计算
     optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=1e-4)
 
 

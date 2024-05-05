@@ -24,7 +24,7 @@ def main():
     # 设置数据集路径
     input_path = './flavia'
     # 参数
-    batch_size = 32
+    batch_size = 48
     # 加载图像、标签和特征
     images, labels, features = feature.load_images_and_labels(input_path)
     # 划分训练集、验证集和测试集

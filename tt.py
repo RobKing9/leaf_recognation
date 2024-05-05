@@ -1,5 +1,3 @@
-import os
-import cv2
 import numpy as np
 import feature
 from model import ResNet50
@@ -52,6 +50,8 @@ def evaluate_model(input_path, model_path='./best_model.pth', batch_size=32):
     # 初始化模型
     n_out = len(np.unique(labels))
     model = ResNet50(n_out=n_out)
+    # 加载最佳模型
+    print("loaded model from best_model.pth...")
     model.load_state_dict(torch.load(model_path))
     model.eval()
 
