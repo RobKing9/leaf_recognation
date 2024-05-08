@@ -1,5 +1,5 @@
 import os
-import cv2
+# import cv2
 import feature
 from model import ResNet50
 from data import ImageDataset
@@ -26,7 +26,7 @@ def main():
     # 设置数据集路径
     input_path = './flavia'
     # 参数
-    batch_size = 48
+    batch_size = 32
     lr = 0.00001
     # 设置训练轮数
     num_epochs = 50
@@ -35,6 +35,10 @@ def main():
     val_losses = []
     train_accs = []
     val_accs = []
+
+    # 判断是否有可用的 GPU
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Using device: {device}")
 
     # 加载图像、标签和特征
     images, labels, features = feature.load_images_and_labels(input_path)
@@ -75,7 +79,7 @@ def main():
     # 获取类别数量
     n_out = len(np.unique(labels))
     # 初始化模型
-    model = ResNet50(n_out=n_out)
+    model = ResNet50(n_out=n_out).to(device)  # 将模型移到指定设备
     # 定义损失函数和优化器
     criterion = nn.CrossEntropyLoss()
     # 交叉熵损失函数适用于多分类问题，且每个类别的概率分布可以直接用softmax函数计算
@@ -92,6 +96,7 @@ def main():
         corrects = 0
         total = 0
         for inputs, _, labels in train_loader:
+            inputs, labels = inputs.to(device), labels.to(device)  # 将数据移到指定设备
             optimizer.zero_grad()    # 梯度清零
             outputs = model(inputs)    # 前向传播
             loss = criterion(outputs, labels)    # 计算损失
@@ -114,6 +119,7 @@ def main():
         model.eval()
         with torch.no_grad():
             for inputs, _, labels in val_loader:
+                inputs, labels = inputs.to(device), labels.to(device)  # 将数据移到指定设备
                 outputs = model(inputs)    # 前向传播
                 loss = criterion(outputs, labels)
                 running_loss += loss.item() * inputs.size(0)    # 累计损失

@@ -32,6 +32,9 @@ def main():
         train_test_split(images, labels, features, test_size=0.2, random_state=42)
     )
 
+    # 判断是否有可用的 GPU
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
     # 图像预处理操作
     transform = transforms.Compose([
         transforms.ToPILImage(),  # 将输入的数据转换为PIL Image格式
@@ -50,9 +53,9 @@ def main():
     # 获取类别数量
     n_out = len(np.unique(labels))
     # 初始化模型
-    model = ResNet50(n_out=n_out)
+    model = ResNet50(n_out=n_out).to(device)  # 将模型移到指定设备
     # 加载最佳模型
-    model.load_state_dict(torch.load('./best_model.pth'))
+    model.load_state_dict(torch.load('./best_model.pth', map_location=device))
     model.eval()     # 设置为评估模式
 
     # 在测试集上进行测试
@@ -63,6 +66,7 @@ def main():
 
     with torch.no_grad():    # 关闭梯度计算
         for inputs, _, labels in test_loader:
+            inputs, labels = inputs.to(device), labels.to(device)  # 将数据移到指定设备
             outputs = model(inputs)    # 预测输出
             _, predicted = torch.max(outputs, 1)    # 预测类别
             test_total += labels.size(0)     # 累计样本数量
