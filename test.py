@@ -238,6 +238,20 @@ def ResNet18():
     net.add_module("fc", nn.Sequential(nn.Flatten(), nn.Linear(512, 32)))
 
     return net
+# 定义ResNet34网络结构
+def ResNet34():
+    net = nn.Sequential(
+        nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3),
+        nn.BatchNorm2d(64),
+        nn.ReLU(),
+        nn.MaxPool2d(kernel_size=3, stride=2, padding=1))
+    net.add_module("resnet_block1", resnet_block(64, 64, 3, first_block=True))  # 修改残差块数量
+    net.add_module("resnet_block2", resnet_block(64, 128, 4))  # 修改残差块数量
+    net.add_module("resnet_block3", resnet_block(128, 256, 6))  # 修改残差块数量
+    net.add_module("resnet_block4", resnet_block(256, 512, 3))  # 修改残差块数量
+    net.add_module("global_avg_pool", GlobalAvgPool2d())
+    net.add_module("fc", nn.Sequential(nn.Flatten(), nn.Linear(512, 32)))
+    return net
 
 # def test_model(model, testdataloader, label, device):
 #     test_corrects = 0.0
@@ -339,8 +353,8 @@ if __name__ == '__main__':
     train_val_split(img_dir, train_dir, val_dir)
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    resnet = ResNet18()
-    resnet.load_state_dict(torch.load("Resnet18_improve.pkl", map_location=device))  # 加载最佳模型
+    resnet = ResNet34()
+    resnet.load_state_dict(torch.load("Resnet34_batch_size_24.pkl", map_location=device))  # 加载最佳模型
     resnet = resnet.to(device)
 
     test_loader = test_data_process(val_dir)  # 加载测试集

@@ -29,13 +29,13 @@ lr = 0.02
 num_epochs = 100
 num_workers = 8
 
-train_data_transforms = transforms.Compose([transforms.Resize([224, 224]),
-                                            transforms.RandomVerticalFlip(p=0.5),
-                                            transforms.RandomHorizontalFlip(p=0.5),
-                                            transforms.RandomRotation(degrees=180),
-                                            transforms.ToTensor(),
+train_data_transforms = transforms.Compose([transforms.Resize([224, 224]),      # 调整图片大小
+                                            transforms.RandomVerticalFlip(p=0.5),   # 随机垂直翻转
+                                            transforms.RandomHorizontalFlip(p=0.5),  # 随机水平翻转
+                                            transforms.RandomRotation(degrees=180),  # 随机旋转180度
+                                            transforms.ToTensor(),  # 转换为张量
                                             transforms.Normalize([0.769235, 0.869587, 0.733468],
-                                                                 [0.339912, 0.204988, 0.388254])
+                                                                 [0.339912, 0.204988, 0.388254])    # 归一化
                                             ]
                                            )
 
@@ -431,18 +431,18 @@ def train_model_process(myconvnet):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'  # GPU加速
     train_loader, class_label = train_data_process(train_dir)  # 加载训练集
     val_loader = val_data_process(val_dir)  # 加载验证集
-    # test_loader = test_data_process(val_dir)  # 加载测试集
+    test_loader = test_data_process(val_dir)  # 加载测试集
 
     myconvnet = myconvnet.to(device)
     myconvnet, train_process = train_model(myconvnet, train_loader, val_loader, criterion, device, optimizer, scheduler, num_epochs=num_epochs)  # 进行模型训练
-    # test_model(myconvnet, test_loader, class_label, device)  # 使用测试集进行评估
+    test_model(myconvnet, test_loader, class_label, device)  # 使用测试集进行评估
 
-    torch.save(myconvnet.state_dict(), "Resnet18_improve.pkl")  # 保存模型
+    torch.save(myconvnet.state_dict(), "Resnet34_batch_size_24.pkl")  # 保存模型
 
 
 if __name__ == '__main__':
     train_val_split(img_dir, train_dir, val_dir)
 
-    resnet = ResNet18()
+    resnet = ResNet34()
     weights_initialize(resnet)
     train_model_process(resnet)
