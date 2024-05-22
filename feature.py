@@ -21,10 +21,15 @@ def load_images_and_labels(input_path, img_size=(256, 256)):
     features = []
     label_encoder = LabelEncoder()
     # 遍历数据集目录
-    for dirname, _, filenames in os.walk(input_path):
+    for dirname, file_labels, filenames in os.walk(input_path):
+        for label in file_labels:
+            labels.append(label)
         for filename in filenames:
             img_path = os.path.join(dirname, filename)
             # print(img_path)
+            # 检查文件扩展名是否是图像格式
+            if not img_path.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.gif')):
+                continue
             # 读取图像并转换为RGB格式
             img = cv2.imread(img_path, cv2.IMREAD_COLOR)
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -38,9 +43,9 @@ def load_images_and_labels(input_path, img_size=(256, 256)):
             # fourier_feature = extract_fourier(img)
             combined_feature = np.concatenate((lbp_feature, gabor_feature))
             features.append(combined_feature)
-            # 提取标签
-            label = os.path.basename(dirname)
-            labels.append(label)
+        # 提取标签
+        # label = os.path.basename(dirname)
+        # labels.append(label)
 
     # 对标签进行编码
     labels = label_encoder.fit_transform(labels)

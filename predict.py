@@ -1,36 +1,55 @@
-import torch
-from torchvision import transforms
 from PIL import Image
+import numpy as np
+import matplotlib.pyplot as plt
+import torch
 from model import ResNet50
+import torchvision.transforms as transforms
+from torch.autograd import Variable as V
+import torch as t
+# 忽略警告
+import warnings
+warnings.filterwarnings("ignore")
 
-def load_model(model_path):
-    model = ResNet50(n_out=32)  # 替换为你的分类类别数
-    model.load_state_dict(torch.load(model_path))
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# totensor 转换
+trans = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
+])
+
+def prediect(img):
+    print('wait..')
+    classes = ['Anhui Barberry', 'Beale\'s barberry', 'Big-fruited Holly', 'Canadian poplar', 'Chinese Toon', 'Chinese cinnamon',
+              'Chinese horse chestnut', 'Chinese redbud', 'Chinese tulip tree', 'Crape myrtle, Crepe myrtle', 'Ford Woodlotus',
+              'Glossy Privet', 'Japan Arrowwood', 'Japanese Flowering Cherry', 'Japanese cheesewood', 'Japanese maple', 'Nanmu',
+              'camphortree', 'castor aralia', 'deodar', 'ginkgo, maidenhair tree', 'goldenrain tree', 'oleander', 'peach',
+              'pubescent bamboo', 'southern magnolia', 'sweet osmanthus', 'tangerine', 'trident maple', 'true indigo',
+              'wintersweet', 'yew plum pine']
+
+    #读入图片
+    #img = Image.open('图片路径')
+    img=trans(img)        #这里经过转换后输出的input格式是[C,H,W],网络输入还需要增加一维批量大小B
+    img = img.unsqueeze(0)      #增加一维，输出的img格式为[1,C,H,W]
+
+    model = ResNet50(32).to(device)   #导入网络模型
     model.eval()
-    return model
+    model.load_state_dict(t.load('./best_model.pth'))        #加载训练好的模型文件
 
-def predict_image(image_path, model, transform):
-    image = Image.open(image_path)
-    image = transform(image).unsqueeze(0)  # 在第0维添加一个维度，因为模型输入要求是batch x channels x height x width
-    with torch.no_grad():
-        output = model(image)
-        _, predicted = torch.max(output, 1)
-    return predicted.item()  # 返回预测的类别索引
+    input = V(img.to(device))
+    score = model(input)            #将图片输入网络得到输出
+    probability = t.nn.functional.softmax(score,dim=1)      #计算softmax，即该图片属于各类的概率
+    max_value,index = t.max(probability,1)          #找到最大概率对应的索引号，该图片即为该索引号对应的类别
+    #print(index)
+    msg = '{} 可能是：{}'.format('这张图',classes[index])
+    print(msg)
+    return msg
 
-if __name__ == "__main__":
-    # 指定最佳模型的路径
-    model_path = './best_model.pth'
-    # 加载模型
-    model = load_model(model_path)
-    # 定义图像预处理操作
-    transform = transforms.Compose([
-        transforms.Resize(256),
-        transforms.CenterCrop(224),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-    ])
-    # 指定输入图像的路径
-    image_path = './test_image.jpg'
-    # 预测图像标签
-    predicted_label = predict_image(image_path, model, transform)
-    print("Predicted label:", predicted_label)
+# ------------------------------------------------------------------------
+
+if __name__ == '__main__':
+
+    img = Image.open('../test/1.jpg')
+    plt.imshow(img)
+    plt.show()
+    prediect(img)
