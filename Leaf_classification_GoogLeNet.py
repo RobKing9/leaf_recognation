@@ -17,6 +17,9 @@ import torch.utils.data as Data
 from torchvision import transforms
 from torchvision import models
 from torchvision.datasets import ImageFolder
+from GoogLeNetData import train_val_split, train_data_process, val_data_process, test_data_process
+from GoogLeNetModel import GoogLeNet
+from ResNet_Test import test_model
 # 忽略警告
 import warnings
 warnings.filterwarnings("ignore")
@@ -28,198 +31,6 @@ batch_size = 24
 lr = 0.02
 num_epochs = 100
 num_workers = 8
-
-train_data_transforms = transforms.Compose([transforms.Resize([224, 224]),
-                                            transforms.RandomVerticalFlip(p=0.5),
-                                            transforms.RandomHorizontalFlip(p=0.5),
-                                            transforms.ToTensor(),
-                                            transforms.Normalize([0.5],
-                                                                 [0.5])
-                                            ]
-                                           )
-
-val_data_transforms = transforms.Compose([transforms.Resize([224, 224]),
-                                          transforms.ToTensor(),
-                                          transforms.Normalize([0.5],
-                                                               [0.5])
-                                          ]
-                                         )
-
-test_data_transforms = transforms.Compose([transforms.Resize([224, 224]),
-                                          transforms.ToTensor(),
-                                          transforms.Normalize([0.5],
-                                                               [0.5])
-                                          ]
-                                         )
-
-
-# 分离训练集和验证集文件
-def train_val_split(imgdir, traindir, valdir, split_rate=0.8):
-    # 清空验证集文件
-    classlist = os.listdir(valdir)
-    for leaf_class in classlist:  # 读取所有的类别文件夹
-        if os.listdir(valdir + leaf_class):  # 如果文件夹不为空，则清空文件夹
-            imglist = os.listdir(valdir + leaf_class)
-            for img_class in imglist:  # 读取每个类别文件夹中的图片
-                os.remove(valdir + leaf_class + '/' + img_class)  # 删除图片
-
-    # 清空训练集文件
-    classlist = os.listdir(traindir)
-    for leaf_class in classlist:  # 读取所有的类别文件夹
-        if os.listdir(traindir + leaf_class):  # 如果文件夹不为空，则清空文件夹
-            imglist = os.listdir(traindir + leaf_class)
-            for img_class in imglist:  # 读取每个类别文件夹中的图片
-                os.remove(traindir + leaf_class + '/' + img_class)  # 删除图片
-
-    classlist = os.listdir(imgdir)
-    for leaf_class in classlist:  # 读取所有的类别文件夹
-        all_imgs = []
-        imglist = os.listdir(imgdir + leaf_class)
-        for img_class in imglist:  # 读取每个类别文件夹中的图片
-            all_imgs.append(img_class)
-        random.shuffle(all_imgs)  # 随机打乱图片顺序
-        train_size = int(len(all_imgs) * split_rate)  # 按比例分割训练集和验证集
-        val_size = len(all_imgs) - train_size
-        assert (train_size > 0)
-        assert (val_size > 0)
-
-        train_imgs = all_imgs[:train_size]
-        val_imgs = all_imgs[train_size:]
-
-        for idx, imgs in enumerate(train_imgs):  # 移动图片到训练集文件夹中
-            st.copy(imgdir + leaf_class + '/' + imgs, traindir + leaf_class)
-
-        for idx, imgs in enumerate(val_imgs):  # 移动图片到验证集文件夹中
-            st.copy(imgdir + leaf_class + '/' + imgs, valdir + leaf_class)
-
-    print('dataset has been split.')
-
-
-def train_data_process(train_data_path):
-    train_data = ImageFolder(train_data_path, transform=train_data_transforms)
-    train_data_loader = Data.DataLoader(train_data, batch_size=batch_size, shuffle=True, num_workers=num_workers)
-    class_label = train_data.classes  # 训练集的标签
-
-    # 加载及可视化一个Batch的图像
-    '''for step, (b_x, b_y) in enumerate(train_data_loader):
-        if step > 0:
-            break
-
-    batch_x = b_x.squeeze().numpy()  # 将四维张量移除第1维，并转换成Numpy数组
-    batch_y = b_y.numpy()  # 将张量转换成Numpy数组
-
-    plt.figure(figsize=(12, 5))
-    for ii in np.arange(len(batch_y)):
-        plt.subplot(4, 16, ii+1)
-        plt.imshow(batch_x[ii, :, :], cmap=plt.cm.gray)
-        plt.title(class_label[batch_y[ii]], size=9)
-        plt.axis("off")
-        plt.subplots_adjust(wspace=0.05)
-    plt.show()'''
-
-    return train_data_loader, class_label
-
-
-def val_data_process(val_data_path):
-    val_data = ImageFolder(val_data_path, transform=val_data_transforms)
-    val_data_loader = Data.DataLoader(val_data, batch_size=batch_size, shuffle=True, num_workers=num_workers)
-
-    return val_data_loader
-
-
-# 处理测试集数据
-def test_data_process(test_data_path):
-    test_data = ImageFolder(test_data_path, transform=test_data_transforms)
-    test_data_loader = Data.DataLoader(test_data, batch_size=batch_size, shuffle=False, num_workers=num_workers)
-
-    return test_data_loader
-
-
-# def model_strcture_visual(model, img_depth, img_size):
-#     x = torch.randn(1, img_depth, img_size, img_size).requires_grad_(True)
-#     y = model(x)
-#     net = make_dot(y, params=dict(list(model.named_parameters()) + [('x', x)]))
-#     net.format = 'png'
-#     net.directory = "C:/Users/HASEE/Desktop/Pycharm_Project"
-#     net.view()
-
-
-# 定义一个全局平均池化层
-class GlobalAvgPool2d(nn.Module):
-    def __init__(self):
-        super(GlobalAvgPool2d, self).__init__()
-
-    def forward(self, x):
-        return nn.functional.avg_pool2d(x, kernel_size=x.size()[2:])  # 池化窗口形状等于输入图像的形状
-
-
-# 定义一个Inception模块
-class Inception(nn.Module):
-    def __init__(self, in_ch, ch1, ch2, ch3, ch4):  # 每一条线路中的输入输出通道数
-        super(Inception, self).__init__()
-        # 线路1，单1x1卷积层
-        self.p1_1 = nn.Conv2d(in_ch, ch1, kernel_size=1)
-        # 线路2，1x1卷积层后接3x3卷积层
-        self.p2_1 = nn.Conv2d(in_ch, ch2[0], kernel_size=1)
-        self.p2_2 = nn.Conv2d(ch2[0], ch2[1], kernel_size=3, padding=1)
-        # 线路3，1x1卷积层后接5x5卷积层
-        self.p3_1 = nn.Conv2d(in_ch, ch3[0], kernel_size=1)
-        self.p3_2 = nn.Conv2d(ch3[0], ch3[1], kernel_size=5, padding=2)
-        # 线路4，3x3最大池化层后接1x1卷积层
-        self.p4_1 = nn.MaxPool2d(kernel_size=3, stride=1, padding=1)
-        self.p4_2 = nn.Conv2d(in_ch, ch4, kernel_size=1)
-
-    def forward(self, x):
-        p1 = nn.functional.relu(self.p1_1(x))
-        p2 = nn.functional.relu(self.p2_2(nn.functional.relu(self.p2_1(x))))
-        p3 = nn.functional.relu(self.p3_2(nn.functional.relu(self.p3_1(x))))
-        p4 = nn.functional.relu(self.p4_2(self.p4_1(x)))
-
-        return torch.cat((p1, p2, p3, p4), dim=1)  # 在通道维度上进行拼接
-
-
-# 定义GoogLeNet模型网络结构
-def GoogLeNet():
-    b1 = nn.Sequential(nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3),
-                       nn.ReLU(),
-                       nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-                       )
-
-    b2 = nn.Sequential(nn.Conv2d(64, 64, kernel_size=1),
-                       nn.Conv2d(64, 192, kernel_size=3, padding=1),
-                       nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-                       )
-
-    b3 = nn.Sequential(Inception(192, 64, (96, 128), (16, 32), 32),
-                       Inception(256, 128, (128, 192), (32, 96), 64),
-                       nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-                       )
-
-    b4 = nn.Sequential(Inception(480, 192, (96, 208), (16, 48), 64),
-                       Inception(512, 160, (112, 224), (24, 64), 64),
-                       Inception(512, 128, (128, 256), (24, 64), 64),
-                       Inception(512, 112, (144, 288), (32, 64), 64),
-                       Inception(528, 256, (160, 320), (32, 128), 128),
-                       nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-                       )
-
-    b5 = nn.Sequential(Inception(832, 256, (160, 320), (32, 128), 128),
-                       Inception(832, 384, (192, 384), (48, 128), 128),
-                       GlobalAvgPool2d()
-                       )
-
-    net = nn.Sequential(b1,
-                        b2,
-                        b3,
-                        b4,
-                        b5,
-                        nn.Flatten(),
-                        nn.Linear(1024, 32)
-                        )
-
-    return net
-
-
 
 # 定义网络权重初始化
 def weights_initialize(model):
@@ -335,58 +146,6 @@ def train_model(model, traindataloader, valdataloader, criterion, device, optimi
 
     return model, train_process
 
-
-# 测试模型
-def test_model(model, testdataloader, label, device):
-    '''
-    :param model: 网络模型
-    :param testdataloader: 测试数据集
-    :param label: 数据集标签
-    :param device:
-    '''
-
-    test_corrects = 0.0
-    test_num = 0
-    test_acc = 0.0
-    test_true = []
-    test_pre = []
-
-    with torch.no_grad():
-        for test_data_x, test_data_y in testdataloader:
-            test_data_x = test_data_x.to(device)
-            test_data_y = test_data_y.to(device)
-            model.eval()  # 设置模型为评估模式，不启用Batch Normalization和Dropout
-            output = model(test_data_x)  # 前向传播过程，输入为测试数据集，输出为对每个样本的预测
-            pre_lab = torch.argmax(output, 1)  # 查找每一行中最大值对应的行标
-            test_corrects += torch.sum(torch.eq(pre_lab, test_data_y.data))
-            test_num += test_data_x.size(0)  # 当前用于训练的样本数量
-            test_true += test_data_y.cpu().tolist()
-            test_pre += pre_lab.cpu().tolist()
-
-    test_acc = test_corrects.item() / test_num
-    precision = precision_score(test_true, test_pre, average='macro')
-    recall = recall_score(test_true, test_pre, average='macro')
-    f1 = f1_score(test_true, test_pre, average='macro')
-    # 计算 准确率, 精确率，召回率，F1值 四个指标
-    print("test accuracy:", test_acc)
-    print("Precision:", precision)
-    print("Recall:", recall)
-    print("F1 score:", f1)
-
-    # 计算混淆矩阵并可视化
-    plt.figure(figsize=(10, 8))
-    conf_mat = confusion_matrix(test_true, test_pre)
-    df_cm = pd.DataFrame(conf_mat, index=label, columns=label)
-    heatmap = sns.heatmap(df_cm, annot=True, fmt="d", cmap="YlGnBu")
-    heatmap.yaxis.set_ticklabels(heatmap.yaxis.get_ticklabels(), rotation=0, ha='right')
-    heatmap.xaxis.set_ticklabels(heatmap.xaxis.get_ticklabels(), rotation=45, ha='right')
-    plt.ylabel('True label')
-    plt.xlabel('Predicted label')
-    plt.subplots_adjust(left=0.35, right=0.9, top=0.9, bottom=0.35)
-    plt.tight_layout()
-    plt.show()
-
-
 # 训练模型
 def train_model_process(myconvnet):
     optimizer = torch.optim.SGD(myconvnet.parameters(), lr=lr, weight_decay=0.01)  # 使用Adam优化器，学习率为0.0003
@@ -400,6 +159,7 @@ def train_model_process(myconvnet):
     myconvnet = myconvnet.to(device)
     myconvnet, train_process = train_model(myconvnet, train_loader, val_loader, criterion, device, optimizer, scheduler, num_epochs=num_epochs)  # 进行模型训练
     test_model(myconvnet, test_loader, class_label, device)  # 使用测试集进行评估
+    torch.save(myconvnet.state_dict(), "GoogLeNet.pkl")  # 保存模型
 
 
 if __name__ == '__main__':
