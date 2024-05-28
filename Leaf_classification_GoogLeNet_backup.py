@@ -400,7 +400,7 @@ def train_model_process(myconvnet):
     myconvnet = myconvnet.to(device)
     myconvnet, train_process = train_model(myconvnet, train_loader, val_loader, criterion, device, optimizer, scheduler, num_epochs=num_epochs)  # 进行模型训练
     test_model(myconvnet, test_loader, class_label, device)  # 使用测试集进行评估
-    torch.save(myconvnet.state_dict(), "GoogLeNet.pkl")  # 保存模型
+    torch.save(myconvnet.state_dict(), "../test/GoogLeNet.pkl")  # 保存模型
 
 
 if __name__ == '__main__':

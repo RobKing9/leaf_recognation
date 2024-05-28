@@ -15,7 +15,7 @@ warnings.filterwarnings("ignore")
 img_dir = 'flavia/image/'
 train_dir = 'flavia/train/'
 val_dir = 'flavia/val/'
-batch_size = 24
+batch_size = 32
 
 # 测试模型
 def test_model(model, testdataloader, label, device):
@@ -55,10 +55,10 @@ def test_model(model, testdataloader, label, device):
     print("F1 score:", f1)
 
     # 计算并打印每个标签的测试识别准确率
-    conf_mat = confusion_matrix(test_true, test_pre)
-    label_accuracy = conf_mat.diagonal() / conf_mat.sum(axis=1)
-    for i, accuracy in enumerate(label_accuracy):
-        print(f"Accuracy for label {label[i]}: {accuracy * 100:.2f}%")
+    # conf_mat = confusion_matrix(test_true, test_pre)
+    # label_accuracy = conf_mat.diagonal() / conf_mat.sum(axis=1)
+    # for i, accuracy in enumerate(label_accuracy):
+    #     print(f"Accuracy for label {label[i]}: {accuracy * 100:.2f}%")
 
     # 计算混淆矩阵并可视化
     plt.figure(figsize=(10, 8))
@@ -81,7 +81,7 @@ if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     googlenet = GoogLeNet()
-    googlenet.load_state_dict(torch.load("GoogLeNet.pkl", map_location=device), strict=False)  # 加载最佳模型
+    googlenet.load_state_dict(torch.load("GoogLeNet_batch_size_32.pkl", map_location=device), strict=False)  # 加载最佳模型
     googlenet = googlenet.to(device)
 
     test_loader = test_data_process(val_dir)  # 加载测试集
@@ -90,4 +90,4 @@ if __name__ == '__main__':
     test_model(googlenet, test_loader, class_label, device)
 
     time_use = time.time() - since  # 计算耗费时间
-    print("Tesl complete in {:.0f}m {:.0f}s".format(time_use // 60, time_use % 60))
+    print("Test complete in {:.0f}m {:.0f}s".format(time_use // 60, time_use % 60))

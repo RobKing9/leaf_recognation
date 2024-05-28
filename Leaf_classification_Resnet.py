@@ -17,10 +17,18 @@ import torch.utils.data as Data
 from torchvision import transforms
 from torchvision import models
 from torchvision.datasets import ImageFolder
+from ResNetData import train_val_split, train_data_process, val_data_process, test_data_process
+from ResNetModel import ResNet18, ResNet34
+from ResNet_Test import test_model
 # 忽略警告
 import warnings
 warnings.filterwarnings("ignore")
 
+img_dir = 'flavia/image/'
+train_dir = 'flavia/train/'
+val_dir = 'flavia/val/'
+lr = 0.02
+num_epochs = 100
 
 # 定义网络权重初始化
 def weights_initialize(model):
@@ -200,12 +208,12 @@ def train_model_process(myconvnet):
     myconvnet, train_process = train_model(myconvnet, train_loader, val_loader, criterion, device, optimizer, scheduler, num_epochs=num_epochs)  # 进行模型训练
     test_model(myconvnet, test_loader, class_label, device)  # 使用测试集进行评估
 
-    torch.save(myconvnet.state_dict(), "Resnet34_batch_size_24.pkl")  # 保存模型
+    torch.save(myconvnet.state_dict(), "Resnet18_batch_size_24.pkl")  # 保存模型
 
 
 if __name__ == '__main__':
     train_val_split(img_dir, train_dir, val_dir)
 
-    resnet = ResNet34()
+    resnet = ResNet18()
     weights_initialize(resnet)
     train_model_process(resnet)

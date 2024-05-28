@@ -27,10 +27,8 @@ warnings.filterwarnings("ignore")
 img_dir = 'flavia/image/'
 train_dir = 'flavia/train/'
 val_dir = 'flavia/val/'
-batch_size = 24
 lr = 0.02
-num_epochs = 100
-num_workers = 8
+num_epochs = 80
 
 # 定义网络权重初始化
 def weights_initialize(model):
@@ -159,7 +157,7 @@ def train_model_process(myconvnet):
     myconvnet = myconvnet.to(device)
     myconvnet, train_process = train_model(myconvnet, train_loader, val_loader, criterion, device, optimizer, scheduler, num_epochs=num_epochs)  # 进行模型训练
     test_model(myconvnet, test_loader, class_label, device)  # 使用测试集进行评估
-    torch.save(myconvnet.state_dict(), "GoogLeNet.pkl")  # 保存模型
+    torch.save(myconvnet.state_dict(), "GoogLeNet_batch_size_32.pkl")  # 保存模型
 
 
 if __name__ == '__main__':

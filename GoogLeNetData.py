@@ -24,7 +24,7 @@ warnings.filterwarnings("ignore")
 img_dir = 'flavia/image/'
 train_dir = 'flavia/train/'
 val_dir = 'flavia/val/'
-batch_size = 24
+batch_size = 32
 lr = 0.02
 num_epochs = 100
 num_workers = 8
@@ -92,7 +92,7 @@ def train_val_split(imgdir, traindir, valdir, split_rate=0.8):
         for idx, imgs in enumerate(val_imgs):  # 移动图片到验证集文件夹中
             st.copy(imgdir + leaf_class + '/' + imgs, valdir + leaf_class)
 
-    print('dataset has been split.')
+    # print('dataset has been split.')
 
 
 def train_data_process(train_data_path):

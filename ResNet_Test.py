@@ -15,7 +15,7 @@ warnings.filterwarnings("ignore")
 img_dir = 'flavia/image/'
 train_dir = 'flavia/train/'
 val_dir = 'flavia/val/'
-batch_size = 24
+batch_size = 32
 
 # 测试模型
 def test_model(model, testdataloader, label, device):
@@ -75,7 +75,7 @@ if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     resnet = ResNet34()
-    resnet.load_state_dict(torch.load("Resnet34_batch_size_24.pkl", map_location=device), strict=False)  # 加载最佳模型
+    resnet.load_state_dict(torch.load("Resnet34_batch_size_32.pkl", map_location=device), strict=False)  # 加载最佳模型
     resnet = resnet.to(device)
 
     test_loader = test_data_process(val_dir)  # 加载测试集
