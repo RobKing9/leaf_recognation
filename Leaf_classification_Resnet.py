@@ -196,7 +196,7 @@ def test_model(model, testdataloader, label, device):
 
 # 训练模型
 def train_model_process(myconvnet):
-    optimizer = torch.optim.SGD(myconvnet.parameters(), lr=lr, weight_decay=0.01)  # 使用Adam优化器，学习率为0.0003
+    optimizer = torch.optim.SGD(myconvnet.parameters(), lr=lr, weight_decay=0.01)  # 使用SGD优化器，学习率为0.0003
     scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.95, last_epoch=-1)
     criterion = nn.CrossEntropyLoss()  # 损失函数为交叉熵函数
     device = 'cuda' if torch.cuda.is_available() else 'cpu'  # GPU加速
@@ -208,12 +208,12 @@ def train_model_process(myconvnet):
     myconvnet, train_process = train_model(myconvnet, train_loader, val_loader, criterion, device, optimizer, scheduler, num_epochs=num_epochs)  # 进行模型训练
     test_model(myconvnet, test_loader, class_label, device)  # 使用测试集进行评估
 
-    torch.save(myconvnet.state_dict(), "Resnet18_batch_size_24.pkl")  # 保存模型
+    torch.save(myconvnet.state_dict(), "Resnet34_batch_size_24.pkl")  # 保存模型
 
 
 if __name__ == '__main__':
     train_val_split(img_dir, train_dir, val_dir)
 
-    resnet = ResNet18()
+    resnet = ResNet34()
     weights_initialize(resnet)
     train_model_process(resnet)

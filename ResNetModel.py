@@ -48,34 +48,34 @@ class Residual(nn.Module):
 
 # 优化残差块结构
 # 优化：使用瓶颈结构。使用1x1卷积减少通道数，然后使用3x3卷积进行特征提取，最后使用1x1卷积恢复通道数
-# class Residual(nn.Module):
-#     def __init__(self, in_channels, out_channels, use_1x1conv=False, stride=1):
-#         super(Residual, self).__init__()
-#
-#         mid_channels = out_channels // 4  # 计算中间通道数
-#
-#         # 定义瓶颈结构
-#         self.conv1 = nn.Conv2d(in_channels, mid_channels, kernel_size=1, stride=stride)
-#         self.conv2 = nn.Conv2d(mid_channels, mid_channels, kernel_size=3, padding=1)
-#         self.conv3 = nn.Conv2d(mid_channels, out_channels, kernel_size=1)
-#
-#         # 1x1卷积用于调整通道数和步幅
-#         if use_1x1conv:
-#             self.conv4 = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride)
-#         else:
-#             self.conv4 = None
-#
-#         self.bn1 = nn.BatchNorm2d(mid_channels)
-#         self.bn2 = nn.BatchNorm2d(mid_channels)
-#         self.bn3 = nn.BatchNorm2d(out_channels)
-#
-#     def forward(self, x):
-#         y = nn.functional.relu(self.bn1(self.conv1(x)))
-#         y = nn.functional.relu(self.bn2(self.conv2(y)))
-#         y = self.bn3(self.conv3(y))
-#         if self.conv4:
-#             x = self.conv4(x)
-#         return nn.functional.relu(y + x)
+class ImprovedResidual(nn.Module):
+    def __init__(self, in_channels, out_channels, use_1x1conv=False, stride=1):
+        super(Residual, self).__init__()
+
+        mid_channels = out_channels // 4  # 计算中间通道数
+
+        # 定义瓶颈结构
+        self.conv1 = nn.Conv2d(in_channels, mid_channels, kernel_size=1, stride=stride)
+        self.conv2 = nn.Conv2d(mid_channels, mid_channels, kernel_size=3, padding=1)
+        self.conv3 = nn.Conv2d(mid_channels, out_channels, kernel_size=1)
+
+        # 1x1卷积用于调整通道数和步幅
+        if use_1x1conv:
+            self.conv4 = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride)
+        else:
+            self.conv4 = None
+
+        self.bn1 = nn.BatchNorm2d(mid_channels)
+        self.bn2 = nn.BatchNorm2d(mid_channels)
+        self.bn3 = nn.BatchNorm2d(out_channels)
+
+    def forward(self, x):
+        y = nn.functional.relu(self.bn1(self.conv1(x)))
+        y = nn.functional.relu(self.bn2(self.conv2(y)))
+        y = self.bn3(self.conv3(y))
+        if self.conv4:
+            x = self.conv4(x)
+        return nn.functional.relu(y + x)
 
 
 def resnet_block(in_channels, out_channels, num_residuals, first_block=False):
