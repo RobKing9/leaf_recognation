@@ -196,8 +196,8 @@ def test_model(model, testdataloader, label, device):
 
 # 训练模型
 def train_model_process(myconvnet):
-    optimizer = torch.optim.SGD(myconvnet.parameters(), lr=lr, weight_decay=0.01)  # 使用SGD优化器，学习率为0.0003
-    scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.95, last_epoch=-1)
+    optimizer = torch.optim.SGD(myconvnet.parameters(), lr=lr, weight_decay=0.01)  # 使用SGD优化器，学习率为0.02, L2 正则化系数为0.01 防止过拟合
+    scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.95, last_epoch=-1) # 使用指数衰减调整学习率 ExponentialLR 来衰减学习率
     criterion = nn.CrossEntropyLoss()  # 损失函数为交叉熵函数
     device = 'cuda' if torch.cuda.is_available() else 'cpu'  # GPU加速
     train_loader, class_label = train_data_process(train_dir)  # 加载训练集
